@@ -1,0 +1,67 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Funzione per ottenere il colore esadecimale basato sul nome del colore
+def get_hex_color(color_name):
+    return plt.colors.to_hex(plt.colors.CSS4_COLORS[color_name])
+
+# Funzione per calcolare il coefficiente di Gini
+def gini_coefficient(x):
+    n = len(x)
+    sorted_x = sorted(x)
+    cumsum_x = np.cumsum(sorted_x)
+    gini_index = (np.sum((2 * np.arange(1, n+1) - n - 1) * sorted_x)) / (n * np.sum(sorted_x))
+    return gini_index * 100  # Moltiplichiamo per 100 per ottenere il coefficiente in percentuale
+
+# Creazione dei grafi
+uniform_graph = nx.complete_graph(20)
+barabasi_albert_graph = nx.barabasi_albert_graph(20, 2)  # Grafo di Barabási-Albert
+zipf_graph_undirected = nx.scale_free_graph(20)  # Grafo scale free non diretto
+zipf_graph = zipf_graph_undirected.to_directed()  # Converti il grafo in un grafo diretto
+
+# Calcoliamo il numero di connessioni di ciascun nodo nei tre grafi
+uniform_degrees = list(dict(uniform_graph.degree()).values())
+barabasi_albert_degrees = list(dict(barabasi_albert_graph.degree()).values())
+zipf_degrees = list(dict(zipf_graph.degree()).values())
+
+# Calcoliamo il coefficiente di Gini per ciascuna distribuzione di grado
+gini_uniform = gini_coefficient(uniform_degrees)
+gini_barabasi_albert = gini_coefficient(barabasi_albert_degrees)
+gini_zipf = gini_coefficient(zipf_degrees)
+
+# Creazione delle figure
+fig, axs = plt.subplots(2, 3, figsize=(12, 8))
+
+# Plot dei grafi
+nx.draw(uniform_graph, ax=axs[0, 0], with_labels=True, node_color='lightblue', node_size=200, edge_color='black', arrows=True)
+axs[0, 0].set_title("Grafo completo")
+nx.draw(barabasi_albert_graph, ax=axs[0, 1], with_labels=True, node_color='lightgreen', node_size=200, edge_color='black', arrows=True)
+axs[0, 1].set_title("Grafo Barabási-Albert")
+nx.draw(zipf_graph, ax=axs[0, 2], with_labels=True, node_color='lightcoral', node_size=200, edge_color='black', arrows=True)
+axs[0, 2].set_title("Grafo scale free")
+
+# Plot dei gradi dei singoli nodi
+axs[1, 0].bar(range(len(uniform_degrees)), uniform_degrees, color='lightblue', alpha=0.5, label='Grafo completo')
+axs[1, 0].set_title("Distribuzione omogenea\nGini coefficient: {:.2f}%".format(gini_uniform))
+axs[1, 0].set_xlabel("Nodo")
+axs[1, 0].set_ylabel("Numero di connessioni")
+axs[1, 1].bar(range(len(barabasi_albert_degrees)), barabasi_albert_degrees, color='lightgreen', alpha=0.5, label='Grafo Barabási-Albert')
+axs[1, 1].set_title("Distribuzione normale\nGini coefficient: {:.2f}%".format(gini_barabasi_albert))
+axs[1, 1].set_xlabel("Nodo")
+axs[1, 1].set_ylabel("Numero di connessioni")
+axs[1, 2].bar(range(len(zipf_degrees)), zipf_degrees, color='lightcoral', alpha=0.5, label='Grafo scale free')
+axs[1, 2].set_title("Distribuzione di Zipf\nGini coefficient: {:.2f}%".format(gini_zipf))
+axs[1, 2].set_xlabel("Nodo")
+axs[1, 2].set_ylabel("Numero di connessioni")
+
+# Impostiamo i ticks dell'asse x come interi anziché decimali
+for ax in axs[1]:
+    ax.set_xticks(range(20))
+
+# Imposta la dimensione dei caratteri sugli assi
+for ax in axs.flatten():
+    ax.tick_params(axis='both', which='major', labelsize=8)
+
+plt.tight_layout()
+plt.show()
